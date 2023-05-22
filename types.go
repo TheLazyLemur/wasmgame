@@ -10,6 +10,7 @@ type Player struct {
 	Width  float32
 	X, Y   float32
 	Color  string
+	Alive  bool
 }
 
 func (p *Player) Draw() {
