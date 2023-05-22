@@ -54,13 +54,13 @@ func gameInput() interface{} {
 	for k := range keys {
 		switch k {
 		case "ArrowLeft":
-			player.X -= 300 * float32(deltaTime)
+			player.X -= 100 * float32(deltaTime)
 		case "ArrowRight":
-			player.X += 300 * float32(deltaTime)
+			player.X += 100 * float32(deltaTime)
 		case "ArrowDown":
-			player.Y += 300 * float32(deltaTime)
+			player.Y += 100 * float32(deltaTime)
 		case "ArrowUp":
-			player.Y -= 300 * float32(deltaTime)
+			player.Y -= 100 * float32(deltaTime)
 		case " ":
 			if !player.Alive {
 				continue
@@ -96,21 +96,26 @@ func gameUpdate(this js.Value, args []js.Value) interface{} {
 	if player.Alive {
 		player.Draw()
 	}
+
+	wg := &sync.WaitGroup{}
+	wg.Add(len(bullets))
 	for b := range bullets {
-		b.Move(float32(deltaTime))
-		b.Draw()
-		b.LifeTime--
-		if b.LifeTime <= 0 {
-			AddToPool(b)
-			delete(bullets, b)
-		}
+		go func(b *Bullet) {
+			defer wg.Done()
+			b.Move(float32(deltaTime))
+			b.Draw()
+			b.LifeTime--
+			if b.LifeTime <= 0 {
+				AddToPool(b)
+				delete(bullets, b)
+			}
+		}(b)
 	}
 
 	if obstancle.Alive {
 		Cvs.DrawRect(obstancle.Color, obstancle.X, obstancle.Y, obstancle.Width, obstancle.Height)
 	}
 
-	wg := &sync.WaitGroup{}
 	wg.Add(2)
 
 	go func() {
@@ -137,6 +142,7 @@ func gameUpdate(this js.Value, args []js.Value) interface{} {
 			}
 		}
 	}()
+
 	wg.Wait()
 
 	elapsedTime := time.Since(startTime)
