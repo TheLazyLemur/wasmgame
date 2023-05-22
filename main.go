@@ -19,6 +19,7 @@ var (
 	startTime                 = time.Now()
 	previousFrameTime         = startTime
 	dTime             float64 = 0
+	deltaTime         float64 = 0
 )
 
 var (
@@ -53,13 +54,13 @@ func gameInput() interface{} {
 	for k := range keys {
 		switch k {
 		case "ArrowLeft":
-			player.X--
+			player.X -= 300 * float32(deltaTime)
 		case "ArrowRight":
-			player.X++
+			player.X += 300 * float32(deltaTime)
 		case "ArrowDown":
-			player.Y++
+			player.Y += 300 * float32(deltaTime)
 		case "ArrowUp":
-			player.Y--
+			player.Y -= 300 * float32(deltaTime)
 		case " ":
 			b := GetFromPool()
 			b.X = player.X
@@ -75,7 +76,7 @@ func gameInput() interface{} {
 
 func gameUpdate(this js.Value, args []js.Value) interface{} {
 	currntTime := time.Now()
-	deltaTime := currntTime.Sub(previousFrameTime).Seconds()
+	deltaTime = currntTime.Sub(previousFrameTime).Seconds()
 	previousFrameTime = currntTime
 
 	dTime -= deltaTime
