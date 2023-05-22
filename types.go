@@ -32,6 +32,11 @@ func (c *Canvas) Clear() {
 	c.ctx.Call("fillRect", 0, 0, Screen_Width, Screen_Height)
 }
 
+func (c *Canvas) Text(text string, x, y float32) {
+	c.ctx.Set("fillStyle", "black")
+	c.ctx.Call("fillText", text, x, y, Screen_Width)
+}
+
 type Bullet struct {
 	Height   float32
 	Width    float32

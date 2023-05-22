@@ -3,12 +3,21 @@ package main
 import (
 	"fmt"
 	"syscall/js"
+	"time"
 )
 
 const (
 	Screen_Width      = 400
 	Screen_Height     = 400
 	Screen_Background = "white"
+)
+
+var (
+	fps               float64 = 60
+	frameDuration             = time.Second / time.Duration(fps)
+	startTime                 = time.Now()
+	previousFrameTime         = startTime
+	dTime             float64 = 0
 )
 
 var (
@@ -39,17 +48,6 @@ var (
 	keys = make(map[string]struct{})
 )
 
-func initGame(this js.Value, args []js.Value) interface{} {
-	document := args[0]
-	canvas := document.Call("getElementById", "myCanvas")
-	ctx := canvas.Call("getContext", "2d")
-
-	Cvs.cvs = canvas
-	Cvs.ctx = ctx
-
-	return nil
-}
-
 func gameInput() interface{} {
 	for k := range keys {
 		switch k {
@@ -75,8 +73,22 @@ func gameInput() interface{} {
 }
 
 func gameUpdate(this js.Value, args []js.Value) interface{} {
+	currntTime := time.Now()
+	deltaTime := currntTime.Sub(previousFrameTime).Seconds()
+	previousFrameTime = currntTime
+
+	dTime -= deltaTime
+	if dTime <= 0 {
+		dTime = 1
+		fps = 1 / deltaTime
+	}
+
 	gameInput()
 	Cvs.Clear()
+
+	fmt.Println(fps)
+	Cvs.Text("FPS: "+fmt.Sprintf("%v", fps), 10, 10)
+
 	if player.Alive {
 		player.Draw()
 	}
@@ -114,6 +126,11 @@ func gameUpdate(this js.Value, args []js.Value) interface{} {
 		}
 	}
 
+	elapsedTime := time.Since(startTime)
+	remainingTime := frameDuration - elapsedTime
+	if remainingTime > 0 {
+		time.Sleep(time.Duration(remainingTime))
+	}
 	js.Global().Call("requestAnimationFrame", js.FuncOf(gameUpdate))
 	return nil
 }
@@ -130,6 +147,17 @@ func HandleKeys(this js.Value, args []js.Value) interface{} {
 
 func HandleKeysUp(this js.Value, args []js.Value) interface{} {
 	delete(keys, args[0].Get("key").String())
+	return nil
+}
+
+func initGame(this js.Value, args []js.Value) interface{} {
+	document := args[0]
+	canvas := document.Call("getElementById", "myCanvas")
+	ctx := canvas.Call("getContext", "2d")
+
+	Cvs.cvs = canvas
+	Cvs.ctx = ctx
+
 	return nil
 }
 
