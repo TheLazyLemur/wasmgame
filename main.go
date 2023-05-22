@@ -115,7 +115,7 @@ func gameUpdate(this js.Value, args []js.Value) interface{} {
 
 	go func() {
 		defer wg.Done()
-		if player.Alive {
+		if player.Alive && obstancle.Alive {
 			if player.X+player.Width > obstancle.X && player.X < obstancle.X+obstancle.Width {
 				if player.Y+player.Height > obstancle.Y && player.Y < obstancle.Y+obstancle.Height {
 					player.Alive = false
