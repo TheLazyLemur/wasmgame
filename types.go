@@ -93,3 +93,11 @@ func GetFromPool() *Bullet {
 func AddToPool(b *Bullet) {
 	bulletPool.Bullets = append(bulletPool.Bullets, b)
 }
+
+type Obstacle struct {
+	Height float32
+	Width  float32
+	X, Y   float32
+	Color  string
+	Alive  bool
+}

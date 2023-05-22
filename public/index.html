@@ -4,19 +4,6 @@
         <meta charset="utf-8">
         <script src="wasm_exec.js"></script>
         <script>
-            let keys = new Map()
-            let keysToRemove = []
-
-            function gameLoop(){
-                keys.forEach((value, key) => {
-                    gameInput(key)
-                })
-
-                gameUpdate()
-                window.requestAnimationFrame(() => {
-                    gameLoop()
-                })
-            }
 
             if (WebAssembly) {
                 // WebAssembly.instantiateStreaming is not currently available in Safari
@@ -30,22 +17,7 @@
                 const go = new Go();
                 WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
                     go.run(result.instance);
-                    let canvas = document.getElementById("myCanvas");
-                    initGame(canvas)
-                    document.addEventListener("keydown", (e) => {
-                        if (e.repeat) return;
-                        keys.set(e.key, true)
-                    })
-
-                    document.addEventListener("keyup", (e) => {
-                        keys.delete(e.key)
-                    })
-
-                    window.requestAnimationFrame(() => {
-                        gameLoop()
-                    })
-
-                    console.log("Here HEre")
+                    initGame(document.getElementById("myCanvas"));
                 });
             } else {
                 console.log("WebAssembly is not supported in your browser")

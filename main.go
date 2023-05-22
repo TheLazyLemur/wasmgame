@@ -26,6 +26,17 @@ var (
 	bullets = make(map[*Bullet]struct{})
 
 	bulletPool = NewBulletPool(20)
+
+	obstancle = &Obstacle{
+		Height: 50,
+		Width:  50,
+		X:      Screen_Width / 2,
+		Y:      Screen_Height / 2,
+		Color:  "magenta",
+		Alive:  true,
+	}
+
+	keys = make(map[string]struct{})
 )
 
 func initGame(this js.Value, args []js.Value) interface{} {
@@ -38,46 +49,32 @@ func initGame(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func gameInput(this js.Value, args []js.Value) interface{} {
-	switch args[0].String() {
-	case "ArrowLeft":
-		player.X--
-	case "ArrowRight":
-		player.X++
-	case "ArrowDown":
-		player.Y++
-	case "ArrowUp":
-		player.Y--
-	case " ":
-		b := GetFromPool()
-		b.X = player.X
-		b.Y = player.Y
+func gameInput() interface{} {
+	for k := range keys {
+		switch k {
+		case "ArrowLeft":
+			player.X--
+		case "ArrowRight":
+			player.X++
+		case "ArrowDown":
+			player.Y++
+		case "ArrowUp":
+			player.Y--
+		case " ":
+			b := GetFromPool()
+			b.X = player.X
+			b.Y = player.Y
 
-		bullets[b] = struct{}{}
-	default:
-		fmt.Println("Unknown input:", args[0])
+			bullets[b] = struct{}{}
+		default:
+			fmt.Println("Unknown input:", k)
+		}
 	}
 	return nil
 }
 
-type Obstacle struct {
-	Height float32
-	Width  float32
-	X, Y   float32
-	Color  string
-	Alive  bool
-}
-
-var obstancle = &Obstacle{
-	Height: 50,
-	Width:  50,
-	X:      Screen_Width / 2,
-	Y:      Screen_Height / 2,
-	Color:  "magenta",
-	Alive:  true,
-}
-
 func gameUpdate(this js.Value, args []js.Value) interface{} {
+	gameInput()
 	Cvs.Clear()
 	if player.Alive {
 		player.Draw()
@@ -100,29 +97,47 @@ func gameUpdate(this js.Value, args []js.Value) interface{} {
 	if player.Alive {
 		if player.X+player.Width > obstancle.X && player.X < obstancle.X+obstancle.Width {
 			if player.Y+player.Height > obstancle.Y && player.Y < obstancle.Y+obstancle.Height {
-				fmt.Println("hit")
 				player.Alive = false
 			}
 		}
 	}
 
-	for b := range bullets {
-		if obstancle.X+obstancle.Width > b.X && obstancle.X < b.X+b.Width {
-			if obstancle.Y+obstancle.Height > b.Y && obstancle.Y < b.Y+b.Height {
-				fmt.Println("hit")
-				obstancle.Alive = false
-				b.LifeTime = 0
+	if obstancle.Alive {
+		for b := range bullets {
+			if obstancle.X+obstancle.Width > b.X && obstancle.X < b.X+b.Width {
+				if obstancle.Y+obstancle.Height > b.Y && obstancle.Y < b.Y+b.Height {
+					obstancle.Alive = false
+					b.LifeTime = 0
+				}
 			}
 		}
 	}
 
+	js.Global().Call("requestAnimationFrame", js.FuncOf(gameUpdate))
+	return nil
+}
+
+func HandleKeys(this js.Value, args []js.Value) interface{} {
+	event := args[0]
+	if event.Get("repeat").Bool() {
+		return nil
+	}
+
+	keys[event.Get("key").String()] = struct{}{}
+	return nil
+}
+
+func HandleKeysUp(this js.Value, args []js.Value) interface{} {
+	delete(keys, args[0].Get("key").String())
 	return nil
 }
 
 func main() {
-	js.Global().Set("gameUpdate", js.FuncOf(gameUpdate))
-	js.Global().Set("gameInput", js.FuncOf(gameInput))
 	js.Global().Set("initGame", js.FuncOf(initGame))
+	js.Global().Call("requestAnimationFrame", js.FuncOf(gameUpdate))
+
+	js.Global().Call("addEventListener", "keydown", js.FuncOf(HandleKeys))
+	js.Global().Call("addEventListener", "keyup", js.FuncOf(HandleKeysUp))
 
 	select {}
 }
