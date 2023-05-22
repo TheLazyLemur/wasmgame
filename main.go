@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"syscall/js"
 	"time"
 )
@@ -13,7 +14,7 @@ const (
 )
 
 var (
-	fps               float64 = 60
+	fps               float64 = 120
 	frameDuration             = time.Second / time.Duration(fps)
 	startTime                 = time.Now()
 	previousFrameTime         = startTime
@@ -86,18 +87,16 @@ func gameUpdate(this js.Value, args []js.Value) interface{} {
 	gameInput()
 	Cvs.Clear()
 
-	fmt.Println(fps)
 	Cvs.Text("FPS: "+fmt.Sprintf("%v", fps), 10, 10)
 
 	if player.Alive {
 		player.Draw()
 	}
 	for b := range bullets {
-		b.Move()
+		b.Move(float32(deltaTime))
 		b.Draw()
 		b.LifeTime--
 		if b.LifeTime <= 0 {
-			fmt.Println("bullet die")
 			AddToPool(b)
 			delete(bullets, b)
 		}
@@ -107,24 +106,34 @@ func gameUpdate(this js.Value, args []js.Value) interface{} {
 		Cvs.DrawRect(obstancle.Color, obstancle.X, obstancle.Y, obstancle.Width, obstancle.Height)
 	}
 
-	if player.Alive {
-		if player.X+player.Width > obstancle.X && player.X < obstancle.X+obstancle.Width {
-			if player.Y+player.Height > obstancle.Y && player.Y < obstancle.Y+obstancle.Height {
-				player.Alive = false
-			}
-		}
-	}
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
 
-	if obstancle.Alive {
-		for b := range bullets {
-			if obstancle.X+obstancle.Width > b.X && obstancle.X < b.X+b.Width {
-				if obstancle.Y+obstancle.Height > b.Y && obstancle.Y < b.Y+b.Height {
-					obstancle.Alive = false
-					b.LifeTime = 0
+	go func() {
+		defer wg.Done()
+		if player.Alive {
+			if player.X+player.Width > obstancle.X && player.X < obstancle.X+obstancle.Width {
+				if player.Y+player.Height > obstancle.Y && player.Y < obstancle.Y+obstancle.Height {
+					player.Alive = false
 				}
 			}
 		}
-	}
+	}()
+
+	go func() {
+		defer wg.Done()
+		if obstancle.Alive {
+			for b := range bullets {
+				if obstancle.X+obstancle.Width > b.X && obstancle.X < b.X+b.Width {
+					if obstancle.Y+obstancle.Height > b.Y && obstancle.Y < b.Y+b.Height {
+						obstancle.Alive = false
+						b.LifeTime = 0
+					}
+				}
+			}
+		}
+	}()
+	wg.Wait()
 
 	elapsedTime := time.Since(startTime)
 	remainingTime := frameDuration - elapsedTime

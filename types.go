@@ -49,8 +49,8 @@ func (b *Bullet) Draw() {
 	Cvs.DrawRect(b.Color, b.X, b.Y, b.Width, b.Height)
 }
 
-func (b *Bullet) Move() {
-	b.X++
+func (b *Bullet) Move(dt float32) {
+	b.X += 300 * dt
 }
 
 type BulletPool struct {
@@ -69,7 +69,7 @@ func NewBulletPool(initAmount int) *BulletPool {
 			X:        0,
 			Y:        0,
 			Color:    "yellow",
-			LifeTime: 1000,
+			LifeTime: 500,
 		})
 	}
 
@@ -85,18 +85,19 @@ func GetFromPool() *Bullet {
 			X:        0,
 			Y:        0,
 			Color:    "yellow",
-			LifeTime: 1000,
+			LifeTime: 500,
 		}
 	}
 
 	bul := bulletPool.Bullets[0]
 	bulletPool.Bullets = bulletPool.Bullets[1:]
-	bul.LifeTime = 1000
+	bul.LifeTime = 500
 	return bul
 }
 
 func AddToPool(b *Bullet) {
 	bulletPool.Bullets = append(bulletPool.Bullets, b)
+	fmt.Println(len(bulletPool.Bullets))
 }
 
 type Obstacle struct {
