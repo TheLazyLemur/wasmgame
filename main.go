@@ -40,7 +40,8 @@ var (
 )
 
 func initGame(this js.Value, args []js.Value) interface{} {
-	canvas := args[0]
+	document := args[0]
+	canvas := document.Call("getElementById", "myCanvas")
 	ctx := canvas.Call("getContext", "2d")
 
 	Cvs.cvs = canvas
@@ -134,8 +135,8 @@ func HandleKeysUp(this js.Value, args []js.Value) interface{} {
 
 func main() {
 	js.Global().Set("initGame", js.FuncOf(initGame))
-	js.Global().Call("requestAnimationFrame", js.FuncOf(gameUpdate))
 
+	js.Global().Call("requestAnimationFrame", js.FuncOf(gameUpdate))
 	js.Global().Call("addEventListener", "keydown", js.FuncOf(HandleKeys))
 	js.Global().Call("addEventListener", "keyup", js.FuncOf(HandleKeysUp))
 
