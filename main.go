@@ -62,6 +62,9 @@ func gameInput() interface{} {
 		case "ArrowUp":
 			player.Y -= 300 * float32(deltaTime)
 		case " ":
+			if !player.Alive {
+				continue
+			}
 			b := GetFromPool()
 			b.X = player.X
 			b.Y = player.Y
