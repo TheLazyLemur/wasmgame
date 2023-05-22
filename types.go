@@ -68,7 +68,7 @@ func NewBulletPool(initAmount int) *BulletPool {
 			Width:    3,
 			X:        0,
 			Y:        0,
-			Color:    "blue",
+			Color:    "yellow",
 			LifeTime: 500,
 		})
 	}
@@ -84,7 +84,7 @@ func GetFromPool() *Bullet {
 			Width:    3,
 			X:        0,
 			Y:        0,
-			Color:    "blue",
+			Color:    "yellow",
 			LifeTime: 500,
 		}
 	}
