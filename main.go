@@ -19,10 +19,12 @@ var (
 		Width:  10,
 		X:      0,
 		Y:      0,
-		Color:  "blue",
+		Color:  "red",
 	}
 
-	bullets = make([]*Bullet, 0)
+	bullets = make(map[*Bullet]struct{})
+
+	bulletPool = NewBulletPool(20)
 )
 
 func initGame(this js.Value, args []js.Value) interface{} {
@@ -46,13 +48,11 @@ func gameInput(this js.Value, args []js.Value) interface{} {
 	case "ArrowUp":
 		player.Y--
 	case " ":
-		bullets = append(bullets, &Bullet{
-			Height: 3,
-			Width:  3,
-			X:      player.X,
-			Y:      player.Y,
-			Color:  "yellow",
-		})
+		b := GetFromPool()
+		b.X = player.X
+		b.Y = player.Y
+
+		bullets[b] = struct{}{}
 	default:
 		fmt.Println("Unknown input:", args[0])
 	}
@@ -62,9 +62,15 @@ func gameInput(this js.Value, args []js.Value) interface{} {
 func gameUpdate(this js.Value, args []js.Value) interface{} {
 	Cvs.Clear()
 	player.Draw()
-	for _, b := range bullets {
+	for b := range bullets {
 		b.Move()
 		b.Draw()
+		b.LifeTime--
+		if b.LifeTime <= 0 {
+			fmt.Println("bullet die")
+			AddToPool(b)
+			delete(bullets, b)
+		}
 	}
 
 	return nil

@@ -1,6 +1,9 @@
 package main
 
-import "syscall/js"
+import (
+	"fmt"
+	"syscall/js"
+)
 
 type Player struct {
 	Height float32
@@ -29,10 +32,11 @@ func (c *Canvas) Clear() {
 }
 
 type Bullet struct {
-	Height float32
-	Width  float32
-	X, Y   float32
-	Color  string
+	Height   float32
+	Width    float32
+	X, Y     float32
+	Color    string
+	LifeTime float32
 }
 
 func (b *Bullet) Draw() {
@@ -41,4 +45,50 @@ func (b *Bullet) Draw() {
 
 func (b *Bullet) Move() {
 	b.X++
+}
+
+type BulletPool struct {
+	Bullets []*Bullet
+}
+
+func NewBulletPool(initAmount int) *BulletPool {
+	p := &BulletPool{
+		Bullets: make([]*Bullet, 0),
+	}
+
+	for i := 0; i < initAmount; i++ {
+		p.Bullets = append(p.Bullets, &Bullet{
+			Height:   3,
+			Width:    3,
+			X:        0,
+			Y:        0,
+			Color:    "yellow",
+			LifeTime: 1000,
+		})
+	}
+
+	return p
+}
+
+func GetFromPool() *Bullet {
+	if len(bulletPool.Bullets) == 0 {
+		fmt.Println("Bullet pool is empty")
+		return &Bullet{
+			Height:   3,
+			Width:    3,
+			X:        0,
+			Y:        0,
+			Color:    "yellow",
+			LifeTime: 1000,
+		}
+	}
+
+	bul := bulletPool.Bullets[0]
+	bulletPool.Bullets = bulletPool.Bullets[1:]
+	bul.LifeTime = 1000
+	return bul
+}
+
+func AddToPool(b *Bullet) {
+	bulletPool.Bullets = append(bulletPool.Bullets, b)
 }
